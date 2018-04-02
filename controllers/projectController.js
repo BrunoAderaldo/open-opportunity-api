@@ -1,4 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectID;
 const assert = require('assert');
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
@@ -7,66 +8,104 @@ const utilsDB = require('../config/db');
 exports.project_list = (req, res, next) => {
   const db = utilsDB.getDbConnection();
 
-  db.collection('projects').find({}).toArray((err, docs) => {
-    if (err) {
+  db.collection('projects').find().toArray()
+    .then(docs => {
+      console.log(docs);
+      res.status(200).json(docs);
+    })
+    .catch(err => {
+      console.log(err);
       res.status(500).json({
-        message: `Error: ${err}`
+        error: err
       });
-    } else {
-      res.status(201).json({
-        docs
-      });
-    }
-  });
+    });
 };
 
-// Display detail page for a specific Project.
+// Display detail info for a specific Project.
 exports.project_detail = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Project detail: ' + req.params.id);
+  const db = utilsDB.getDbConnection();
+
+  const id = req.params.projectId;
+
+  db.collection('projects').findOne({ _id: ObjectId(id) })
+    .then(doc => {
+      console.log(`From Database ${doc}`);
+
+      if (doc) {
+        res.status(200).json(doc);
+      } else {
+        res
+          .status(404)
+          .json({ message: 'No valid entry found for provided ID' });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        message: err
+      });
+    });
 };
 
-// Display Project create form on GET.
-exports.project_create_get = (req, res, next) => {
-};
-
-// Handle Project create on POST.
-exports.project_create_post = (req, res, next) => {
+// Handle Project create
+exports.project_create = (req, res, next) => {
   const db = utilsDB.getDbConnection();
 
   var project = new Project(req.body);
-  console.log(project);
-  console.log(req.body);
 
-  db.collection('projects').insertOne(project, (err, r) => {
-    if (err) {
+  db.collection('projects').insertOne(project)
+    .then(result => {
+      console.log(result.ops);
+      res.status(201).json({
+        message: "Handling POST requests to /products",
+        createdProduct: result.ops
+      });
+    })
+    .catch(err => {
       res.status(500).json({
         message: `Error: ${err}`
       });
-    } else {
-      res.status(201).json({
-        r
-        // createdProduct: product
+    });
+};
+
+// Handle Project delete
+exports.project_delete = (req, res, next) => {
+  const db = utilsDB.getDbConnection();
+  const id = req.params.projectId;
+
+  db.collection('projects').deleteOne({ _id: ObjectId(id) })
+    .then(result => {
+      console.log(result.deletedCount);
+      res.status(200).json({
+        deletedCount: result.deletedCount
       });
-    }
-  });
+    })
+    .catch(err => {
+      res.status(500).json({
+        error: err
+      });
+    });
 };
 
-// Display Project delete form on GET.
-exports.project_delete_get = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Project delete GET');
-};
+// Handle Project update
+exports.project_update = (req, res, next) => {
+  const db = utilsDB.getDbConnection();
+  const id = req.params.projectId;
+  const updateOps = {};
 
-// Handle Project delete on POST.
-exports.project_delete_post = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Project delete POST');
-};
+  for (const ops of req.body) {
+    updateOps[ops.proName] = ops.value;
+  }
 
-// Display Project update form on GET.
-exports.project_update_get = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Project update GET');
-};
-
-// Handle Project update on POST.
-exports.project_update_post = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Project update POST');
+  db.collection('projects').updateOne({ _id: ObjectId(id) }, { $set: updateOps })
+    .then(result => {
+      console.log(result);
+      res.status(200).json();
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    });
 };
