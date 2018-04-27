@@ -3,11 +3,10 @@ const assert = require('assert');
 
 let db;
 
-const url = 'mongodb://localhost:27017';
-const dbName = 'open-jobs';
+const dbName = process.env.DB_NAME;
 
 exports.connectDB = callback => {
-  MongoClient.connect(url, (err, client) => {
+  MongoClient.connect(process.env.DB_HOST, (err, client) => {
     assert.equal(null, err);
     console.log(`Connected successfully to ${dbName}`);
 
