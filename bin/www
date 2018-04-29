@@ -6,7 +6,7 @@
 require('dotenv').config();
 var utilsDB = require('../config/db.js');
 var app = require('../app');
-var debug = require('debug')('open-jobs-api:server');
+var debug = require('debug')('open-opportunity-api:server');
 var http = require('http');
 
 utilsDB.connectDB((err, client) => {
