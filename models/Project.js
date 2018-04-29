@@ -1,10 +1,12 @@
 const ObjectId = require('mongodb').ObjectID;
 
 class Project {
-  constructor({ name, description }) {
+  constructor({ projectCategory, projectName, projectDescription }) {
     this._id = new ObjectId();
-    this.name = name;
-    this.description = description;
+    this.createdAt = new Date();
+    this.projectCategory = projectCategory;
+    this.projectName = projectName;
+    this.projectDescription = projectDescription;
   }
 }
 
