@@ -1,20 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const project_controller = require('../controllers/projectController');
+const projectController = require('../controllers/projectController');
 
-/* GET projects listing. */
-router.get('/', project_controller.project_list);
+router.get('/', projectController.list);
 
-/* POST projects. */
-router.post('/', project_controller.project_create);
+router.post('/', projectController.create);
 
-/* GET project detail. */
-router.get('/:projectId', project_controller.project_detail);
+router.get('/:projectId', projectController.detail);
 
-/* PATCH project update. */
-router.patch('/:projectId', project_controller.project_update);
+router.patch('/:projectId', projectController.update);
 
-/* DELETE project. */
-router.delete('/:projectId', project_controller.project_delete);
+router.delete('/:projectId', projectController.delete);
 
 module.exports = router;

@@ -4,8 +4,7 @@ const assert = require('assert');
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
 
-// Display list of all books.
-exports.project_list = (req, res, next) => {
+exports.list = (req, res, next) => {
   const db = utilsDB.getDbConnection();
 
   db.collection('projects').find().toArray()
@@ -21,8 +20,7 @@ exports.project_list = (req, res, next) => {
     });
 };
 
-// Display detail info for a specific Project.
-exports.project_detail = (req, res, next) => {
+exports.detail = (req, res, next) => {
   const db = utilsDB.getDbConnection();
 
   const id = req.params.projectId;
@@ -47,8 +45,7 @@ exports.project_detail = (req, res, next) => {
     });
 };
 
-// Handle Project create
-exports.project_create = (req, res, next) => {
+exports.create = (req, res, next) => {
   const db = utilsDB.getDbConnection();
 
   var project = new Project(req.body);
@@ -68,8 +65,7 @@ exports.project_create = (req, res, next) => {
     });
 };
 
-// Handle Project delete
-exports.project_delete = (req, res, next) => {
+exports.delete = (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const id = req.params.projectId;
 
@@ -87,8 +83,7 @@ exports.project_delete = (req, res, next) => {
     });
 };
 
-// Handle Project update
-exports.project_update = (req, res, next) => {
+exports.update = (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const id = req.params.projectId;
   const updateOps = {};
