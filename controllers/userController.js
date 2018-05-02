@@ -2,13 +2,12 @@ const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const authConfig = require('../config/auth');
 const assert = require('assert');
 const User = require('../models/User');
 const utilsDB = require('../config/db');
 
 function generateToken(params = {}) {
-  return jwt.sign(params, authConfig.secret, {
+  return jwt.sign(params, process.env.JWT_SECRET, {
     expiresIn: 86400
   });
 }
