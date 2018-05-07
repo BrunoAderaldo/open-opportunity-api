@@ -6,11 +6,21 @@ const utilsDB = require('../config/db');
 
 exports.list = (req, res, next) => {
   const db = utilsDB.getDbConnection();
+  const projects = db.collection('projects');
 
-  db.collection('projects').find().toArray()
+  projects.find().toArray()
     .then(docs => {
       console.log(docs);
-      res.status(200).json(docs);
+      if (docs.length === 0)
+        res.status(200).json({
+          count: docs.length,
+          message: 'Nothing to return'
+        });
+
+      res.status(200).json({
+        count: docs.length,
+        projects: docs
+      });
     })
     .catch(err => {
       console.log(err);
@@ -20,10 +30,11 @@ exports.list = (req, res, next) => {
 
 exports.detail = (req, res, next) => {
   const db = utilsDB.getDbConnection();
+  const projects = db.collection('projects');
 
   const id = req.params.projectId;
 
-  db.collection('projects').findOne({ _id: ObjectId(id) })
+  projects.findOne({ _id: ObjectId(id) })
     .then(doc => {
       console.log(`From Database ${doc}`);
 
@@ -41,15 +52,14 @@ exports.detail = (req, res, next) => {
 
 exports.create = (req, res, next) => {
   const db = utilsDB.getDbConnection();
+  const projects = db.collection('projects');
 
   var project = new Project(req.body);
 
-  db.collection('projects').insertOne(project)
+  projects.insertOne(project)
     .then(result => {
       console.log(result.ops);
-      res.status(201).json({
-        createdProduct: result.ops
-      });
+      res.status(201).json({ createdProduct: result.ops });
     })
     .catch(err => {
       res.status(500).json({ message: `Error: ${err}` });
@@ -58,12 +68,19 @@ exports.create = (req, res, next) => {
 
 exports.delete = (req, res, next) => {
   const db = utilsDB.getDbConnection();
+  const projects = db.collection('projects');
   const id = req.params.projectId;
 
-  db.collection('projects').deleteOne({ _id: ObjectId(id) })
+  projects.findOneAndDelete({ _id: ObjectId(id) })
     .then(result => {
-      console.log(result.deletedCount);
-      res.status(200).json({ deletedCount: result.deletedCount });
+      console.log(result);
+      if (result.value === null)
+        res.status(404).json({ error: 'Not found' });
+
+      res.status(200).json({
+        deletedCount: result.n,
+        deleted: result.value
+      });
     })
     .catch(err => {
       res.status(500).json({ error: err });
@@ -72,6 +89,7 @@ exports.delete = (req, res, next) => {
 
 exports.update = (req, res, next) => {
   const db = utilsDB.getDbConnection();
+  const projects = db.collection('projects');
   const id = req.params.projectId;
   const updateOps = {};
 
@@ -79,10 +97,10 @@ exports.update = (req, res, next) => {
     updateOps[ops.proName] = ops.value;
   }
 
-  db.collection('projects').updateOne({ _id: ObjectId(id) }, { $set: updateOps })
+  projects.updateOne({ _id: ObjectId(id) }, { $set: updateOps })
     .then(result => {
       console.log(result);
-      res.status(200).json();
+      res.status(200).json({ message: 'Product updated' });
     })
     .catch(err => {
       console.log(err);
