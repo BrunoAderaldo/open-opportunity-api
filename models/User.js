@@ -6,7 +6,6 @@ class User {
     this.createdAt = new Date();
     this.email     = email;
     this.password  = password;
-    this.confirmed = false;
   }
 }
 
