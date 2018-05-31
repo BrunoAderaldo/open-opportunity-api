@@ -4,92 +4,87 @@ const assert = require('assert');
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
 
-exports.list = (req, res, next) => {
+exports.list = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
-  projects.find().toArray()
-    .then(docs => {
-      console.log(docs);
-      if (docs.length === 0)
-        res.status(200).json({
-          count: docs.length,
-          message: 'Nothing to return'
-        });
+  try {
+    const docs = await projects.find().toArray();
 
-      res.status(200).json({
-        count: docs.length,
-        projects: docs
-      });
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({ error: err });
-    });
+    if (docs)
+      res.status(200).json({ projects: docs });
+    else
+      res.status(500).json({ message: 'Nothing to return' });
+
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
 };
 
-exports.detail = (req, res, next) => {
+exports.detail = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
   const id = req.params.projectId;
 
-  projects.findOne({ _id: ObjectId(id) })
-    .then(doc => {
-      console.log(`From Database ${doc}`);
+  try {
+    const doc = await projects.findOne({ _id: ObjectId(id) });
 
-      if (doc) {
-        res.status(200).json(doc);
-      } else {
-        res.status(404).json({ message: 'No valid entry found for provided ID' });
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({ message: err });
-    });
+    if (doc)
+      res.status(200).json(doc);
+    else
+      res.status(404).json({ message: 'No valid entry found for provided ID' });
+
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
 };
 
-exports.create = (req, res, next) => {
+exports.create = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
-  var project = new Project(req.body);
+  const userId = ObjectId(req.userId);
 
-  projects.insertOne(project)
-    .then(result => {
-      console.log(result.ops);
+  const project = new Project({ ...req.body, userID: userId });
+
+  try {
+    const result = await projects.insertOne(project);
+
+    if (result)
       res.status(201).json({ createdProduct: result.ops });
-    })
-    .catch(err => {
-      res.status(500).json({ message: `Error: ${err}` });
-    });
+
+  } catch (err) {
+    res.status(500).json({ message: `Error: ${err}` });
+  }
 };
 
-exports.delete = (req, res, next) => {
+exports.delete = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
+
   const id = req.params.projectId;
 
-  projects.findOneAndDelete({ _id: ObjectId(id) })
-    .then(result => {
-      console.log(result);
-      if (result.value === null)
-        res.status(404).json({ error: 'Not found' });
+  try {
+    const result = await findOneAndDelete({ _id: ObjectId(id) });
 
+    if (result.value)
       res.status(200).json({
         deletedCount: result.n,
         deleted: result.value
       });
-    })
-    .catch(err => {
-      res.status(500).json({ error: err });
-    });
+    else
+      res.status(404).json({ error: 'Not found' });
+
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
 };
 
-exports.update = (req, res, next) => {
+exports.update = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
+
   const id = req.params.projectId;
   const updateOps = {};
 
@@ -97,13 +92,13 @@ exports.update = (req, res, next) => {
     updateOps[ops.proName] = ops.value;
   }
 
-  projects.updateOne({ _id: ObjectId(id) }, { $set: updateOps })
-    .then(result => {
-      console.log(result);
+  try {
+    const result = await projects.updateOne({ _id: ObjectId(id) }, { $set: updateOps });
+
+    if (result)
       res.status(200).json({ message: 'Product updated' });
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json({ error: err });
-    });
+
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
 };
