@@ -9,7 +9,23 @@ exports.list = async (req, res, next) => {
   const projects = db.collection('projects');
 
   try {
-    const docs = await projects.find().toArray();
+    //const docs = await projects.find().toArray();
+    const docs = await projects.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userID',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $project: {
+          "user.createdAt": 0,
+          "user.password": 0
+        }
+      }
+    ]).toArray();
 
     if (docs)
       res.status(200).json({ projects: docs });
@@ -28,7 +44,25 @@ exports.detail = async (req, res, next) => {
   const id = req.params.projectId;
 
   try {
-    const doc = await projects.findOne({ _id: ObjectId(id) });
+    const doc = await projects.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userID',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $match: { _id: ObjectId(id) }
+      },
+      {
+        $project: {
+          "user.createdAt": 0,
+          "user.password": 0
+        }
+      }
+    ]).toArray();
 
     if (doc)
       res.status(200).json(doc);
