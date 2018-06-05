@@ -9,7 +9,6 @@ exports.list = async (req, res, next) => {
   const projects = db.collection('projects');
 
   try {
-    //const docs = await projects.find().toArray();
     const docs = await projects.aggregate([
       {
         $lookup: {
@@ -21,19 +20,28 @@ exports.list = async (req, res, next) => {
       },
       {
         $project: {
-          "user.createdAt": 0,
-          "user.password": 0
+          'user.createdAt': 0,
+          'user.password': 0
         }
       }
     ]).toArray();
 
     if (docs)
-      res.status(200).json({ projects: docs });
+      res.status(200).json({
+        code: 200,
+        projects: docs
+      });
     else
-      res.status(500).json({ message: 'Nothing to return' });
+      res.status(404).json({
+        code: 404,
+        message: 'Nothing to return'
+      });
 
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({
+      code: 500,
+      error
+    });
   }
 };
 
@@ -41,7 +49,7 @@ exports.detail = async (req, res, next) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
-  const id = req.params.projectId;
+  const { id } = req.params;
 
   try {
     const doc = await projects.aggregate([
