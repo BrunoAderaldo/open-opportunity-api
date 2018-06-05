@@ -7,10 +7,10 @@ router.get('/', projectController.list);
 
 router.post('/', authMiddleware, projectController.create);
 
-router.get('/:projectId', projectController.detail);
+router.get('/:id', projectController.detail);
 
-router.patch('/:projectId', authMiddleware, projectController.update);
+router.patch('/:id', authMiddleware, projectController.update);
 
-router.delete('/:projectId', authMiddleware, projectController.delete);
+router.delete('/:id', authMiddleware, projectController.delete);
 
 module.exports = router;
