@@ -1,10 +1,9 @@
-const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const assert = require('assert');
 const User = require('../models/User');
 const utilsDB = require('../config/db');
+const { check, validationResult } = require('express-validator/check');
 
 function generateToken(params = {}) {
   return jwt.sign(params, process.env.JWT_SECRET, {
@@ -12,7 +11,19 @@ function generateToken(params = {}) {
   });
 }
 
-exports.register = async (req, res, next) => {
+exports.register = [
+  check('email').isEmail().withMessage('Please enter a valid email address'),
+  check('password').isLength({ min: 6 }).withMessage('Password must contain 6 or more characterssword'),
+
+  async (req, res) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty())
+    return res.status(422).json({
+      code: 422,
+      errors: errors.array()
+    });
+
   const db = utilsDB.getDbConnection();
   const users = db.collection('users');
 
@@ -26,11 +37,12 @@ exports.register = async (req, res, next) => {
         message: 'Email already exists'
       });
 
-    await bcrypt.hash(password, 12, (err, hash) => {
-      if (err)
+    await bcrypt.hash(password, 12, (error, hash) => {
+      if (error)
         return res.status(500).json({
           code: 500,
-          error: err
+          error: error.message,
+          description: error.stack
         });
 
       const user = new User({
@@ -52,7 +64,8 @@ exports.register = async (req, res, next) => {
         .catch(error => {
           res.status(500).json({
             code: 500,
-            error
+            error: error.message,
+            description: error.stack
           });
         });
     });
@@ -62,13 +75,23 @@ exports.register = async (req, res, next) => {
       error
     });
   }
-};
+}];
 
-exports.authenticate = async (req, res, next) => {
-  const db = utilsDB.getDbConnection();
-  const users = db.collection('users');
+exports.authenticate = [
+  check('email').isEmail().withMessage('Please enter a valid email address'),
+  check('password').isLength({ min: 6 }).withMessage('Password must contain 6 or more characterssword'),
 
-  const { email, password } = req.body;
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty())
+      return res.status(422).json({
+        code: 422,
+        errors: errors.array()
+      });
+
+    const db = utilsDB.getDbConnection();
+    const users = db.collection('users');
 
   try {
     const user = await users.findOne({ email });
@@ -99,9 +122,9 @@ exports.authenticate = async (req, res, next) => {
       description: error.stack
     });
   }
-};
+}];
 
-exports.showProfile = async (req, res, next) => {
+exports.showProfile = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const users = db.collection('users');
 
