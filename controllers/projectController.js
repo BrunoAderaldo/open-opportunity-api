@@ -1,10 +1,9 @@
-const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
-const assert = require('assert');
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
+const { check, validationResult } = require('express-validator/check');
 
-exports.list = async (req, res, next) => {
+exports.list = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
@@ -20,6 +19,7 @@ exports.list = async (req, res, next) => {
       },
       {
         $project: {
+          'userID': 0,
           'user.createdAt': 0,
           'user.password': 0
         }
@@ -40,12 +40,13 @@ exports.list = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({
       code: 500,
-      error
+      error: error.message,
+      description: error.stack
     });
   }
 };
 
-exports.detail = async (req, res, next) => {
+exports.detail = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
@@ -82,7 +83,7 @@ exports.detail = async (req, res, next) => {
   }
 };
 
-exports.create = async (req, res, next) => {
+exports.create = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
@@ -101,14 +102,14 @@ exports.create = async (req, res, next) => {
   }
 };
 
-exports.delete = async (req, res, next) => {
+exports.delete = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
   const id = req.params.projectId;
 
   try {
-    const result = await findOneAndDelete({ _id: ObjectId(id) });
+    const result = await projects.findOneAndDelete({ _id: ObjectId(id) });
 
     if (result.value)
       res.status(200).json({
@@ -123,7 +124,7 @@ exports.delete = async (req, res, next) => {
   }
 };
 
-exports.update = async (req, res, next) => {
+exports.update = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
