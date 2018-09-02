@@ -1,19 +1,15 @@
-var express = require('express');
-var compression = require('compression');
-var helmet = require('helmet');
-var createError = require('http-errors');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const createError = require('http-errors');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var projectsRouter = require('./routes/projects');
-var usersRouter = require('./routes/users');
+const indexRouter = require('./routes/index');
+const authRouter = require('./routes/auth');
+const usersRouter = require('./routes/users');
+const projectsRouter = require('./routes/projects');
 
-var app = express();
+const app = express();
 
-app.use(helmet());
-app.use(compression());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -34,7 +30,8 @@ app.use((req, res, next) => {
 
 app.use('/', indexRouter);
 app.use('/projects', projectsRouter);
-app.use('/auth', usersRouter);
+app.use('/auth', authRouter);
+app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
