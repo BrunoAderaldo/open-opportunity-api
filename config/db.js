@@ -1,4 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
+const Logger = require('mongodb').Logger;
 const assert = require('assert');
 
 let db;
@@ -13,9 +14,11 @@ if (process.env.NODE_ENV !== 'development') {
 const dbName = process.env.DB_NAME;
 
 exports.connectDB = callback => {
-  MongoClient.connect(URL, (err, client) => {
+  MongoClient.connect(URL, { poolSize: 10 }, (err, client) => {
     assert.equal(null, err);
     console.log(`Connected successfully to ${dbName}`);
+
+    Logger.setLevel('info');
 
     db = client.db(dbName);
 
