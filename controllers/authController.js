@@ -11,8 +11,13 @@ function generateToken(params = {}) {
 }
 
 exports.register = [
-  check('email').isEmail().withMessage('Please enter a valid email address'),
-  check('password').isLength({ min: 6 }).withMessage('Password must contain 6 or more characters'),
+  check('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address'),
+
+  check('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must contain 6 or more characters'),
 
   async (req, res) => {
     const errors = validationResult(req);
@@ -78,8 +83,13 @@ exports.register = [
 ];
 
 exports.authenticate = [
-  check('email').isEmail().withMessage('Please enter a valid email address'),
-  check('password').isLength({ min: 6 }).withMessage('Password must contain 6 or more characters'),
+  check('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address'),
+
+  check('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must contain 6 or more characters'),
 
   async (req, res) => {
     const errors = validationResult(req);
