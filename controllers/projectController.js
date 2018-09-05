@@ -1,7 +1,7 @@
 const ObjectId = require('mongodb').ObjectID;
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
-const { check, validationResult } = require('express-validator/check');
+const { body, check, validationResult } = require('express-validator/check');
 
 exports.list = async (req, res) => {
   const db = utilsDB.getDbConnection();
@@ -83,24 +83,42 @@ exports.detail = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
-  const db = utilsDB.getDbConnection();
-  const projects = db.collection('projects');
+exports.create = [
+  check('name')
+    .isLength({ min: 10 })
+    .withMessage('The project name must contain 10 or more characters'),
 
-  const userId = ObjectId(req.userId);
+  check('description')
+    .isLength({ min: 30 })
+    .withMessage('The project description must contain 30 or more characters'),
 
-  const project = new Project({ ...req.body, userID: userId });
+  async (req, res) => {
+    const errors = validationResult(req);
 
-  try {
-    const result = await projects.insertOne(project);
+    if (!errors.isEmpty())
+      return res.status(422).json({
+        code: 422,
+        errors: errors.array()
+      });
 
-    if (result)
-      res.status(201).json({ createdProduct: result.ops });
+    const db = utilsDB.getDbConnection();
+    const projects = db.collection('projects');
 
-  } catch (err) {
-    res.status(500).json({ message: `Error: ${err}` });
+    const userID = ObjectId(req.userId);
+
+    const project = new Project({ ...req.body, userID });
+
+    try {
+      const result = await projects.insertOne(project);
+
+      if (result)
+        res.status(201).json({ createdProduct: result.ops });
+
+    } catch (err) {
+      res.status(500).json({ message: `Error: ${err}` });
+    }
   }
-};
+];
 
 exports.delete = async (req, res) => {
   const db = utilsDB.getDbConnection();
