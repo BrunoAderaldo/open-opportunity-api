@@ -92,6 +92,16 @@ exports.create = [
     .isLength({ min: 30 })
     .withMessage('The project description must contain 30 or more characters'),
 
+  check('skills')
+    .isArray()
+    .withMessage('Skills must be array'),
+
+  check('skills.*')
+    .isString()
+    .withMessage('Each skill must be String')
+    .isLength({ min: 1 })
+    .withMessage('Each skill must contain at least 1 character'),
+
   async (req, res) => {
     const errors = validationResult(req);
 
