@@ -1,12 +1,12 @@
 const ObjectId = require('mongodb').ObjectID;
 
 class Project {
-  constructor({ name, description, skills, userID }) {
+  constructor({ name, description, skills, userId }) {
     this._id         = new ObjectId();
     this.name        = name;
     this.description = description;
     this.skills      = skills;
-    this.userID      = userID;
+    this.userId      = userId;
     this.createdAt   = new Date();
   }
 }

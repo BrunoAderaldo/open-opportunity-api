@@ -27,7 +27,7 @@ exports.showProfile = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const users = db.collection('users');
 
-  const { id } = req.params;
+  const id = req.params.id;
 
   try {
     const user = await users.aggregate([
@@ -35,7 +35,7 @@ exports.showProfile = async (req, res) => {
         $lookup: {
           from: 'projects',
           localField: '_id',
-          foreignField: 'userID',
+          foreignField: 'userId',
           as: 'projects'
         }
       },
@@ -46,7 +46,7 @@ exports.showProfile = async (req, res) => {
         $project: {
           'createdAt': 0,
           'password': 0,
-          'projects.userID': 0
+          'projects.userId': 0
         }
       }
     ]).toArray();
