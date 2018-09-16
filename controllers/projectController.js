@@ -1,25 +1,24 @@
 const ObjectId = require('mongodb').ObjectID;
 const Project = require('../models/Project');
 const utilsDB = require('../config/db');
-const { body, check, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator/check');
 
 exports.list = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
   try {
-    const docs = await projects.aggregate([
+     const docs = await projects.aggregate([
       {
         $lookup: {
           from: 'users',
-          localField: 'userID',
+          localField: 'userId',
           foreignField: '_id',
           as: 'user'
         }
       },
       {
         $project: {
-          'userID': 0,
           'user.createdAt': 0,
           'user.password': 0
         }
@@ -50,14 +49,14 @@ exports.detail = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
-  const { id } = req.params;
+  const id = req.params.id;
 
   try {
     const doc = await projects.aggregate([
       {
         $lookup: {
           from: 'users',
-          localField: 'userID',
+          localField: 'userId',
           foreignField: '_id',
           as: 'user'
         }
@@ -114,9 +113,9 @@ exports.create = [
     const db = utilsDB.getDbConnection();
     const projects = db.collection('projects');
 
-    const userID = ObjectId(req.userId);
+    const userId = ObjectId(req.userId);
 
-    const project = new Project({ ...req.body, userID });
+    const project = new Project({ ...req.body, userId });
 
     try {
       const result = await projects.insertOne(project);
@@ -134,7 +133,7 @@ exports.delete = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
-  const id = req.params.projectId;
+  const id = req.params.id;
 
   try {
     const result = await projects.findOneAndDelete({ _id: ObjectId(id) });
@@ -152,24 +151,63 @@ exports.delete = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
-  const db = utilsDB.getDbConnection();
-  const projects = db.collection('projects');
+exports.update = [
+  check('name')
+    .isLength({ min: 10 })
+    .withMessage('The project name must contain 10 or more characters'),
 
-  const id = req.params.projectId;
-  const updateOps = {};
+  check('description')
+    .isLength({ min: 30 })
+    .withMessage('The project description must contain 30 or more characters'),
 
-  for (const ops of req.body) {
-    updateOps[ops.proName] = ops.value;
+  check('skills')
+    .isArray()
+    .withMessage('Skills must be array'),
+
+  check('skills.*')
+    .isString()
+    .withMessage('Each skill must be String')
+    .isLength({ min: 1 })
+    .withMessage('Each skill must contain at least 1 character'),
+
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty())
+      return res.status(422).json({
+        code: 422,
+        errors: errors.array()
+      });
+
+    try {
+      const db = utilsDB.getDbConnection();
+      const projects = db.collection('projects');
+
+      const id = req.params.id;
+
+      const project = await projects.findOne({ _id: ObjectId(id) });
+
+      if (!project.userId.equals(req.userId))
+        return res.sendStatus(401);
+
+      Object.keys(req.body).forEach(key => {
+        project[key] = req.body[key];
+      });
+
+      const result = await projects.updateOne({ _id: ObjectId(id) }, { $set: project });
+
+      if (result)
+        res.status(200).json({
+          message: 'Product updated',
+          project
+        });
+
+    } catch (err) {
+      res.status(500).json({
+        code: 500,
+        error: error.message,
+        description: error.stack
+      });
+    }
   }
-
-  try {
-    const result = await projects.updateOne({ _id: ObjectId(id) }, { $set: updateOps });
-
-    if (result)
-      res.status(200).json({ message: 'Product updated' });
-
-  } catch (err) {
-    res.status(500).json({ error: err });
-  }
-};
+];
