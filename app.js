@@ -1,12 +1,13 @@
-const express = require('express');
-const createError = require('http-errors');
+const express      = require('express');
+const createError  = require('http-errors');
 const cookieParser = require('cookie-parser');
-const logger = require('morgan');
+const logger       = require('morgan');
 
-const indexRouter = require('./routes/index');
-const authRouter = require('./routes/auth');
-const usersRouter = require('./routes/users');
+const indexRouter    = require('./routes/index');
+const authRouter     = require('./routes/auth');
+const usersRouter    = require('./routes/users');
 const projectsRouter = require('./routes/projects');
+const API_PREFIX     = 'v1';
 
 const app = express();
 
@@ -28,10 +29,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', indexRouter);
-app.use('/projects', projectsRouter);
-app.use('/auth', authRouter);
-app.use('/users', usersRouter);
+app.use(`/${API_PREFIX}/`, indexRouter);
+app.use(`/${API_PREFIX}/auth`, authRouter);
+app.use(`/${API_PREFIX}/users`, usersRouter);
+app.use(`/${API_PREFIX}/projects`, projectsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
