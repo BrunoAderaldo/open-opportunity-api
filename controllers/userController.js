@@ -1,7 +1,7 @@
 const ObjectId = require('mongodb').ObjectID;
 const utilsDB = require('../config/db');
 
-exports.list = async (req, res) => {
+exports.index = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const users = db.collection('users');
 
@@ -23,11 +23,11 @@ exports.list = async (req, res) => {
   }
 };
 
-exports.showProfile = async (req, res) => {
+exports.show = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const users = db.collection('users');
 
-  const id = req.params.id;
+  const {id} = req.params;
 
   try {
     const user = await users.aggregate([
@@ -66,6 +66,37 @@ exports.showProfile = async (req, res) => {
       code: 400,
       msg: error.message,
       description: error.stack
+    });
+  }
+};
+
+exports.update = async (req, res) => {
+  const db = utilsDB.getDbConnection();
+  const users = db.collection('users');
+
+  try {
+    const { id } = req.params;
+
+    const user = await users.findOne({ _id: ObjectId(id) });
+
+    if (!user._id.equals(req.userId))
+      return res.sendStatus(401);
+
+    Object.keys(req.body).forEach(key => user[key] = req.body[key]);
+
+    const result = await users.updateOne({ _id: ObjectId(id) }, { $set: user });
+
+    if (result) {
+      res.status(200).json({
+        message: 'Usuário atualizado',
+        user
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      code: 500,
+      error: err.message,
+      description: err.stack
     });
   }
 };

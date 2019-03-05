@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const bcrypt  = require('bcrypt');
+const jwt     = require('jsonwebtoken');
+const User    = require('../models/User');
 const utilsDB = require('../config/db');
 const { check, validationResult } = require('express-validator/check');
 
@@ -31,7 +31,7 @@ exports.register = [
     const db = utilsDB.getDbConnection();
     const users = db.collection('users');
 
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
       if (await users.findOne({ email }))
@@ -50,12 +50,13 @@ exports.register = [
           });
 
         const user = new User({
+          name,
           email,
           password: hash
         });
 
         users.insertOne(user)
-          .then(result => {
+          .then(() => {
             user.password = undefined;
 
             res.status(201).json({
