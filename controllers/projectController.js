@@ -3,7 +3,7 @@ const Project = require('../models/Project');
 const utilsDB = require('../config/db');
 const { check, validationResult } = require('express-validator/check');
 
-exports.list = async (req, res) => {
+exports.index = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
@@ -45,7 +45,7 @@ exports.list = async (req, res) => {
   }
 };
 
-exports.detail = async (req, res) => {
+exports.show = async (req, res) => {
   const db = utilsDB.getDbConnection();
   const projects = db.collection('projects');
 
@@ -82,7 +82,7 @@ exports.detail = async (req, res) => {
   }
 };
 
-exports.create = [
+exports.store = [
   check('name')
     .isLength({ min: 10 })
     .withMessage('The project name must contain 10 or more characters'),
@@ -129,28 +129,6 @@ exports.create = [
   }
 ];
 
-exports.delete = async (req, res) => {
-  const db = utilsDB.getDbConnection();
-  const projects = db.collection('projects');
-
-  const id = req.params.id;
-
-  try {
-    const result = await projects.findOneAndDelete({ _id: ObjectId(id) });
-
-    if (result.value)
-      res.status(200).json({
-        deletedCount: result.n,
-        deleted: result.value
-      });
-    else
-      res.status(404).json({ error: 'Not found' });
-
-  } catch (err) {
-    res.status(500).json({ error: err });
-  }
-};
-
 exports.update = [
   check('name')
     .isLength({ min: 10 })
@@ -183,16 +161,14 @@ exports.update = [
       const db = utilsDB.getDbConnection();
       const projects = db.collection('projects');
 
-      const id = req.params.id;
+      const {id} = req.params;
 
       const project = await projects.findOne({ _id: ObjectId(id) });
 
       if (!project.userId.equals(req.userId))
         return res.sendStatus(401);
 
-      Object.keys(req.body).forEach(key => {
-        project[key] = req.body[key];
-      });
+      Object.keys(req.body).forEach(key => project[key] = req.body[key]);
 
       const result = await projects.updateOne({ _id: ObjectId(id) }, { $set: project });
 
@@ -205,9 +181,34 @@ exports.update = [
     } catch (err) {
       res.status(500).json({
         code: 500,
-        error: error.message,
-        description: error.stack
+        error: err.message,
+        description: err.stack
       });
     }
   }
 ];
+
+exports.destroy = async (req, res) => {
+  const db = utilsDB.getDbConnection();
+  const projects = db.collection("projects");
+
+  const {id} = req.params;
+
+  const project = await projects.findOne({ _id: ObjectId(id) });
+
+  if (!project.userId.equals(req.userId))
+    return res.sendStatus(401);
+
+  try {
+    const result = await projects.findOneAndDelete({ _id: ObjectId(id) });
+
+    if (result.value)
+      res.status(200).json({
+        deletedCount: result.n,
+        deleted: result.value
+      });
+    else res.status(404).json({ error: "Not found" });
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
+};
